@@ -4,15 +4,16 @@ import { spawn } from "child_process";
 async function startRemoteBrowser(): Promise<any> {
     console.log("Starting browser...");
 
-    spawn("/Applications/Brave Browser.app/Contents/MacOS/Brave Browser", [
+    const braveProcess = spawn("/Applications/Brave Browser.app/Contents/MacOS/Brave Browser", [
         "--remote-debugging-port=9222",
         "--user-data-dir=/tmp/brave-debug",
-    ], { detached: true, stdio: "inherit" }).unref();
+    ], { detached: true, stdio: "inherit" });
 
-    let browser;
+    let browser: Awaited<ReturnType<typeof chromium.connectOverCDP>>;
     while (true) {
         try {
             browser = await chromium.connectOverCDP("http://127.0.0.1:9222");
+            process.on("SIGINT", async () => { await browser.close(); braveProcess.kill(); process.exit(); });
             break;
         } catch(err) {
             await new Promise(r => setTimeout(r, 500));
@@ -32,11 +33,15 @@ async function startRemoteBrowser(): Promise<any> {
 }
 
 
-
 async function apply(url: string) {
     let page = await startRemoteBrowser();
-    // await page.goto(url, { waitUntil: "load", timeout: 30000 }).catch(() => { blocked = true; });
+
+    await page.goto(url, { waitUntil: "load", timeout: 30000 }).catch((err: Error) => {
+        return console.error(`Navigation failed: ${err}`)
+    });
+
+    // Click on apply button
 }
 
-apply("https://simplify.jobs/c/Peraton?utm_source=GHList&utm_medium=company");
+apply("https://dimensional.wd5.myworkdayjobs.com/dfa_careers/job/Austin/Internship-in-Technology---Software-Engineer_2026-9022");
 
