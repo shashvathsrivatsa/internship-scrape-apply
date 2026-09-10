@@ -41,6 +41,12 @@ async function apply(url: string) {
     });
 
     // Click on apply button
+    await page.getByRole("button", { name: /apply/i }).first().click();
+
+    // Handle popup (workday)
+    await page.getByRole("button", { name: /apply manually/i }).first().click();
+
+    // 
 }
 
 apply("https://dimensional.wd5.myworkdayjobs.com/dfa_careers/job/Austin/Internship-in-Technology---Software-Engineer_2026-9022");
